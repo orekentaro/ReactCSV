@@ -1,0 +1,7 @@
+.dropzone {
+  font-family: sans-serif;
+  text-align: center;
+  border: 1px dashed;
+  margin:5% 10%;
+  height: 100px;
+}
