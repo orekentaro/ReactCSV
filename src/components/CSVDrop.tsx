@@ -2,11 +2,14 @@ import * as React from 'react'
 import {useCallback} from 'react'
 import {useDropzone} from 'react-dropzone'
 import CustomizedSnackbars, {AlertType} from './CustomizedSnackbars';
+import Papa, { parse } from 'papaparse'
+
 
 function CSVDropZone() {
   const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
     setStatus({ ...status, open: false })
   }
+  const [parsedCsvData, setParsedCsvData] = React.useState([]);
 
   const [status, setStatus] = React.useState<AlertType>({
     open: false,
@@ -15,13 +18,26 @@ function CSVDropZone() {
     message: "成功しました。"
   });
 
-  const onDrop = useCallback((data: any) => {
-    // Do something with the files
-    if(data[0].type !== 'text/csv'){
-      console.log('OK')
-      setStatus({ open: true, type: 'error',handleClose: handleClose, message: 'ファイルタイプがCSVではありません。' });
-    }
+  const onDrop = useCallback((acceptedFiles: any) => {
+    // if(acceptedFiles[0].type !== 'text/csv'){
+    //   setStatus({ open: true, type: 'error',handleClose: handleClose, message: 'ファイルタイプがCSVではありません。' });
+    // } else {
+    // }
+    readCsv(acceptedFiles[0]).then(res => {
+      console.log(res);
+    });
   }, [])
+
+  function readCsv(file: string) {
+    return new Promise<string>((resolve, reject) => {
+      parse(file, {
+        complete: (results: any) => {
+          resolve(results.data);
+        }
+      });
+    });
+  }
+
 
   const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
 
