@@ -9,7 +9,8 @@ function CSVDropZone() {
   const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
     setStatus({ ...status, open: false })
   }
-  const [parsedCsvData, setParsedCsvData] = React.useState([]);
+  const [csvHeader, setCsvHeader] = React.useState<string>();
+  const [csvData, setCsvData] = React.useState<string>()
 
   const [status, setStatus] = React.useState<AlertType>({
     open: false,
@@ -19,13 +20,22 @@ function CSVDropZone() {
   });
 
   const onDrop = useCallback((acceptedFiles: any) => {
-    // if(acceptedFiles[0].type !== 'text/csv'){
-    //   setStatus({ open: true, type: 'error',handleClose: handleClose, message: 'ファイルタイプがCSVではありません。' });
-    // } else {
-    // }
-    readCsv(acceptedFiles[0]).then(res => {
-      console.log(res);
-    });
+    if(acceptedFiles.length > 1){
+      setStatus({ open: true, type: 'error',handleClose: handleClose, message: '同時に加工できるファイルは一つです。' });
+    }
+    else if(acceptedFiles[0].type !== 'text/csv'){
+      setStatus({ open: true, type: 'error',handleClose: handleClose, message: 'ファイルタイプがCSVではありません。' });
+    }
+    else {
+      readCsv(acceptedFiles[0]).then(header => {
+        setCsvHeader(header)
+      });
+      csvToJson(acceptedFiles[0]).then(jsonData => {
+        setCsvData(jsonData)
+      })
+    }
+    console.log(csvHeader)
+    console.log(csvData)
   }, [])
 
   function readCsv(file: string) {
@@ -38,6 +48,17 @@ function CSVDropZone() {
     });
   }
 
+  function csvToJson(file:string){
+    return new Promise<string>((resolve) =>{
+      parse(file, {
+        header: true,
+        delimiter:',',
+        complete:(json: any) =>{
+          resolve(json.data)
+        },
+      });
+    });
+  }
 
   const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
 
