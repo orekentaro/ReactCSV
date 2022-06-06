@@ -8,32 +8,42 @@ import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import SendIcon from '@mui/icons-material/Send';
+import CustomizedSnackbars, {AlertType} from './CustomizedSnackbars';
 
-// Left,Rightをstringに改造
-
-function not(a: readonly number[], b: readonly number[]) {
+function not(a: readonly string[], b: readonly string[]) {
   return a.filter((value) => b.indexOf(value) === -1);
 }
 
-function intersection(a: readonly number[], b: readonly number[]) {
+function intersection(a: readonly string[], b: readonly string[]) {
   return a.filter((value) => b.indexOf(value) !== -1);
 }
 
 type Props = {
-  csvHeader: string[],
-  length: number
+  csvHeader: string[]
 }
 
 const TransferList = (props: Props) => {
-  const {csvHeader, length} = props
-  const [checked, setChecked] = React.useState<readonly number[]>([]);
-  const [left, setLeft] = React.useState<readonly number[]>([0, 1, 2, 3, 4, 5, 6, 7]);
-  const [right, setRight] = React.useState<readonly number[]>([]);
+  const {csvHeader} = props
+  const [checked, setChecked] = React.useState<readonly string[]>([]);
+  const [left, setLeft] = React.useState<readonly string[]>([]);
+  const [right, setRight] = React.useState<readonly string[]>([]);
+  const [sendFlag, setSendFlag] = React.useState<boolean>(true);
+
+  const handleClose = () => {
+    setStatus({ ...status, open: false })
+  }
+
+  const [status, setStatus] = React.useState<AlertType>({
+    open: false,
+    type: "success",
+    handleClose: handleClose,
+    message: "必要なカラムを選択して右に送ってね！"
+  });
 
   const leftChecked = intersection(checked, left);
   const rightChecked = intersection(checked, right);
 
-  const handleToggle = (value: number) => () => {
+  const handleToggle = (value: string) => () => {
     const currentIndex = checked.indexOf(value);
     const newChecked = [...checked];
 
@@ -46,15 +56,24 @@ const TransferList = (props: Props) => {
     setChecked(newChecked);
   };
 
+  const sendFlagCheck = () => {
+    if(sendFlag){
+      setStatus({...status, open: true, message: '選択し終わったら送信ボタンを押してね！'})
+      setSendFlag(false)
+    }
+  }
+
   const handleAllRight = () => {
     setRight(right.concat(left));
     setLeft([]);
+    sendFlagCheck()
   };
 
   const handleCheckedRight = () => {
     setRight(right.concat(leftChecked));
     setLeft(not(left, leftChecked));
     setChecked(not(checked, leftChecked));
+    sendFlagCheck()
   };
 
   const handleCheckedLeft = () => {
@@ -68,10 +87,17 @@ const TransferList = (props: Props) => {
     setRight([]);
   };
 
-  const customList = (items: readonly number[]) => (
-    <Paper sx={{ width: 200, height: 230, overflow: 'auto' }}>
+  const setData = () => {
+    setLeft(csvHeader)
+    setRight([])
+    setStatus({...status, open:true})
+    setSendFlag(true)
+  }
+
+  const customList = (items: readonly string[]) => (
+    <Paper elevation={2} sx={{ width: 400, height: 450, overflow: 'auto' }}>
       <List dense component="div" role="list">
-        {items.map((value: number) => {
+        {items.map((value: string, index: number) => {
           const labelId = `transfer-list-item-${value}-label`;
 
           return (
@@ -91,7 +117,7 @@ const TransferList = (props: Props) => {
                   }}
                 />
               </ListItemIcon>
-              <ListItemText id={labelId} primary={`List item ${csvHeader}`} />
+              <ListItemText id={labelId} primary={items[index]} />
             </ListItem>
           );
         })}
@@ -101,57 +127,78 @@ const TransferList = (props: Props) => {
   );
 
   return (
-    <Grid container spacing={2} justifyContent="center" alignItems="center">
-      <Grid item>{customList(left)}</Grid>
-      <Grid item>
-        <Grid container direction="column" alignItems="center">
-          <Button
-            sx={{ my: 0.5 }}
-            variant="outlined"
-            size="small"
-            onClick={handleAllRight}
-            disabled={left.length === 0}
-            aria-label="move all right"
-          >
-            ≫
-          </Button>
-          <Button
-            sx={{ my: 0.5 }}
-            variant="outlined"
-            size="small"
-            onClick={handleCheckedRight}
-            disabled={leftChecked.length === 0}
-            aria-label="move selected right"
-          >
-            &gt;
-          </Button>
-          <Button
-            sx={{ my: 0.5 }}
-            variant="outlined"
-            size="small"
-            onClick={handleCheckedLeft}
-            disabled={rightChecked.length === 0}
-            aria-label="move selected left"
-          >
-            &lt;
-          </Button>
-          <Button
-            sx={{ my: 0.5 }}
-            variant="outlined"
-            size="small"
-            onClick={handleAllLeft}
-            disabled={right.length === 0}
-            aria-label="move all left"
-          >
-            ≪
-          </Button>
-          <Button variant="contained" endIcon={<SendIcon />}>
-          Send
-        </Button>
+    <div>
+      <Grid container spacing={2} justifyContent="center" alignItems="center">
+        <Grid item>{customList(left)}</Grid>
+        <Grid item>
+          <Grid container direction="column" alignItems="center">
+            <Button 
+              sx={{ my: 0.5 }}
+              onClick={setData}
+              disabled={csvHeader.length === 0}
+              variant="contained"
+              color="success"
+              >
+              データセット
+            </Button>
+            <Button
+              sx={{ my: 0.5 }}
+              variant="outlined"
+              size="small"
+              onClick={handleAllRight}
+              disabled={left.length === 0}
+              aria-label="move all right"
+            >
+              ≫
+            </Button>
+            <Button
+              sx={{ my: 0.5 }}
+              variant="outlined"
+              size="small"
+              onClick={handleCheckedRight}
+              disabled={leftChecked.length === 0}
+              aria-label="move selected right"
+            >
+              &gt;
+            </Button>
+            <Button
+              sx={{ my: 0.5 }}
+              variant="outlined"
+              size="small"
+              onClick={handleCheckedLeft}
+              disabled={rightChecked.length === 0}
+              aria-label="move selected left"
+            >
+              &lt;
+            </Button>
+            <Button
+              sx={{ my: 0.5 }}
+              variant="outlined"
+              size="small"
+              onClick={handleAllLeft}
+              disabled={right.length === 0}
+              aria-label="move all left"
+            >
+              ≪
+            </Button>
+            <Button 
+              variant="contained"
+              endIcon={<SendIcon />}
+              disabled={right.length === 0}
+              >
+              送信
+            </Button>
+          </Grid>
         </Grid>
+        <Grid item>{customList(right)}</Grid>
       </Grid>
-      <Grid item>{customList(right)}</Grid>
-    </Grid>
+      <CustomizedSnackbars
+        open={status.open}
+        handleClose={handleClose}
+        type={status.type}
+        message={status.message}
+        />
+    </div>
   );
 }
 

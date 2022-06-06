@@ -34,6 +34,7 @@ function CSVDropZone() {
       csvToJson(acceptedFiles[0]).then(jsonData => {
         setCsvData(jsonData)
       })
+      setStatus({ open: true, type: 'success',handleClose: handleClose, message: 'データセットを押してね！' });
     }
   }, [])
 
@@ -80,7 +81,6 @@ function CSVDropZone() {
       <div>
         <TransferList
           csvHeader={csvHeader}
-          length={csvHeader.length}
         />
       </div>
     </div>
