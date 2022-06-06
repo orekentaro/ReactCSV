@@ -9,6 +9,7 @@ import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import SendIcon from '@mui/icons-material/Send';
 
+// Left,Rightをstringに改造
 
 function not(a: readonly number[], b: readonly number[]) {
   return a.filter((value) => b.indexOf(value) === -1);
@@ -18,10 +19,16 @@ function intersection(a: readonly number[], b: readonly number[]) {
   return a.filter((value) => b.indexOf(value) !== -1);
 }
 
-export default function TransferList() {
+type Props = {
+  csvHeader: string[],
+  length: number
+}
+
+const TransferList = (props: Props) => {
+  const {csvHeader, length} = props
   const [checked, setChecked] = React.useState<readonly number[]>([]);
-  const [left, setLeft] = React.useState<readonly number[]>([0, 1, 2, 3]);
-  const [right, setRight] = React.useState<readonly number[]>([4, 5, 6, 7]);
+  const [left, setLeft] = React.useState<readonly number[]>([0, 1, 2, 3, 4, 5, 6, 7]);
+  const [right, setRight] = React.useState<readonly number[]>([]);
 
   const leftChecked = intersection(checked, left);
   const rightChecked = intersection(checked, right);
@@ -84,7 +91,7 @@ export default function TransferList() {
                   }}
                 />
               </ListItemIcon>
-              <ListItemText id={labelId} primary={`List item ${value + 1}`} />
+              <ListItemText id={labelId} primary={`List item ${csvHeader}`} />
             </ListItem>
           );
         })}
@@ -147,3 +154,5 @@ export default function TransferList() {
     </Grid>
   );
 }
+
+export default TransferList

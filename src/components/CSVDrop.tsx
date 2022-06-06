@@ -29,17 +29,16 @@ function CSVDropZone() {
     }
     else {
       readCsv(acceptedFiles[0]).then(header => {
-        setCsvHeader([header[0]])
+        setCsvHeader(header[0])
       });
       csvToJson(acceptedFiles[0]).then(jsonData => {
         setCsvData(jsonData)
       })
-      console.log(csvHeader)
     }
   }, [])
 
   function readCsv(file: string) {
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<string[][]>((resolve, reject) => {
       parse(file, {
         complete: (results: any) => {
           resolve(results.data);
@@ -79,7 +78,10 @@ function CSVDropZone() {
         message={status.message}
         />
       <div>
-        {/* <TransferList/> */}
+        <TransferList
+          csvHeader={csvHeader}
+          length={csvHeader.length}
+        />
       </div>
     </div>
 
