@@ -2,14 +2,15 @@ import * as React from 'react'
 import {useCallback} from 'react'
 import {useDropzone} from 'react-dropzone'
 import CustomizedSnackbars, {AlertType} from './CustomizedSnackbars';
-import Papa, { parse } from 'papaparse'
+import { parse } from 'papaparse'
+import TransferList from './TransferList';
 
 
 function CSVDropZone() {
   const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
     setStatus({ ...status, open: false })
   }
-  const [csvHeader, setCsvHeader] = React.useState<string>();
+  const [csvHeader, setCsvHeader] = React.useState<string[]>([]);
   const [csvData, setCsvData] = React.useState<string>()
 
   const [status, setStatus] = React.useState<AlertType>({
@@ -28,14 +29,13 @@ function CSVDropZone() {
     }
     else {
       readCsv(acceptedFiles[0]).then(header => {
-        setCsvHeader(header)
+        setCsvHeader([header[0]])
       });
       csvToJson(acceptedFiles[0]).then(jsonData => {
         setCsvData(jsonData)
       })
+      console.log(csvHeader)
     }
-    console.log(csvHeader)
-    console.log(csvData)
   }, [])
 
   function readCsv(file: string) {
@@ -63,20 +63,26 @@ function CSVDropZone() {
   const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
 
   return (
-    <div {...getRootProps()}>
-      <input {...getInputProps()} />
-      {
-        isDragActive ?
-          <p className="dropzone">ここでドロップしてね ...</p> :
-          <p className="dropzone">加工したいCSVをドラッグ&ドロップするか、クリックしてファイルを選択してね！</p>
-      }
+    <div>
+      <div {...getRootProps()}>
+        <input {...getInputProps()} />
+        {
+          isDragActive ?
+            <p className="dropzone">ここでドロップしてね ...</p> :
+            <p className="dropzone">加工したいCSVをドラッグ&ドロップするか、クリックしてファイルを選択してね！</p>
+        }
+      </div>
       <CustomizedSnackbars
-      open={status.open}
-      handleClose={handleClose}
-      type={status.type}
-      message={status.message}
-      />
+        open={status.open}
+        handleClose={handleClose}
+        type={status.type}
+        message={status.message}
+        />
+      <div>
+        {/* <TransferList/> */}
+      </div>
     </div>
+
   )
 }
 

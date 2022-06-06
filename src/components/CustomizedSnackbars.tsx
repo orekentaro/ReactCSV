@@ -17,13 +17,13 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
   }
 
   const CustomizedSnackbars = (props: AlertType) => {
-  const { open, handleClose, type, message } = props;
+  const { open, handleClose, type, message } = props
   return(
     <Snackbar
     open={open}
     autoHideDuration={60000}
     onClose={handleClose}>
-      <Alert severity={type} sx={{ width: '100%' }}>
+      <Alert onClose={handleClose} severity={type} sx={{ width: '100%' }}>
         {message}
       </Alert>
     </Snackbar>
