@@ -4,21 +4,36 @@ import {useDropzone} from 'react-dropzone'
 import CustomizedSnackbars, {AlertType} from './CustomizedSnackbars';
 import { parse } from 'papaparse'
 import TransferList from './TransferList';
-
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 function CSVDropZone() {
-  const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+  const handleClose = () => {
     setStatus({ ...status, open: false })
   }
   const [csvHeader, setCsvHeader] = React.useState<string[]>([]);
-  const [csvData, setCsvData] = React.useState<string>()
+  const [csvData, setCsvData] = React.useState<any>()
+  const [sendHeader, setSendHeader] = React.useState<string[]>([])
+  const [open, setOpen] = React.useState<boolean>(false);
+  const [checkBoxData, setCheckBoxData] = React.useState<string[]>(["CSV"]);
 
   const [status, setStatus] = React.useState<AlertType>({
     open: false,
     type: "success",
     handleClose: handleClose,
-    message: "成功しました。"
+    message: "成功しましたrea。"
   });
+
+  const handleCloseDialog = () => {
+    setOpen(false);
+  };
 
   const onDrop = useCallback((acceptedFiles: any) => {
     if(acceptedFiles.length > 1){
@@ -31,9 +46,7 @@ function CSVDropZone() {
       readCsv(acceptedFiles[0]).then(header => {
         setCsvHeader(header[0])
       });
-      csvToJson(acceptedFiles[0]).then(jsonData => {
-        setCsvData(jsonData)
-      })
+      setCsvData(acceptedFiles[0])
       setStatus({ open: true, type: 'success',handleClose: handleClose, message: 'データセットを押してね！' });
     }
   }, [])
@@ -48,19 +61,35 @@ function CSVDropZone() {
     });
   }
 
-  function csvToJson(file:string){
-    return new Promise<string>((resolve) =>{
-      parse(file, {
-        header: true,
-        delimiter:',',
-        complete:(json: any) =>{
-          resolve(json.data)
-        },
-      });
-    });
+  const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
+
+  const submitButtonClick = () => {
+    setOpen(true);
   }
 
-  const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
+  const handleCloseDialogAndSend = () => {
+    console.log(sendHeader)
+    console.log(csvData)
+    console.log(checkBoxData)
+    setOpen(false);
+    setCheckBoxData(['CSV'])
+  }
+
+  const clickCsvCheck = () => {
+    checkBoxResult('CSV')
+  }
+
+  const clickJsonCheck = () => {
+    checkBoxResult('JSON')
+  }
+
+  const checkBoxResult = (dataStyle: string) => {
+    if (!checkBoxData.includes(dataStyle)){
+      checkBoxData.push(dataStyle)
+    } else {
+      setCheckBoxData(checkBoxData.filter((element) => element !== dataStyle ))
+    }
+  }
 
   return (
     <div>
@@ -81,10 +110,42 @@ function CSVDropZone() {
       <div>
         <TransferList
           csvHeader={csvHeader}
+          setSendHeader={setSendHeader}
+          sendButton={submitButtonClick}
         />
       </div>
+      <Dialog
+        open={open}
+        onClose={handleCloseDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"どの形式のデータで出力しますか？"}
+        </DialogTitle>
+        <DialogContent>
+          <FormGroup>
+            <FormControlLabel control={
+              <Checkbox
+                defaultChecked
+                onChange={clickCsvCheck}
+                />
+              } label="CSV"/>
+            <FormControlLabel control={
+              <Checkbox
+                onChange={clickJsonCheck}
+              />
+              } label="JSON"/>
+          </FormGroup>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>キャンセル</Button>
+          <Button onClick={handleCloseDialogAndSend} autoFocus>
+            送信
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
-
   )
 }
 

@@ -19,7 +19,9 @@ function intersection(a: readonly string[], b: readonly string[]) {
 }
 
 type Props = {
-  csvHeader: string[]
+  csvHeader: string[],
+  setSendHeader: Function,
+  sendButton: Function
 }
 
 const TransferList = (props: Props) => {
@@ -92,6 +94,11 @@ const TransferList = (props: Props) => {
     setRight([])
     setStatus({...status, open:true})
     setSendFlag(true)
+  }
+
+  const submitData = () => {
+    props.setSendHeader(right)
+    props.sendButton()
   }
 
   const customList = (items: readonly string[]) => (
@@ -185,6 +192,7 @@ const TransferList = (props: Props) => {
               variant="contained"
               endIcon={<SendIcon />}
               disabled={right.length === 0}
+              onClick={submitData}
               >
               送信
             </Button>
