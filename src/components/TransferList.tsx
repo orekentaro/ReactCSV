@@ -37,7 +37,7 @@ const TransferList = (props: Props) => {
 
   const [status, setStatus] = React.useState<AlertType>({
     open: false,
-    type: "success",
+    type: "info",
     handleClose: handleClose,
     message: "必要なカラムを選択して右に送ってね！"
   });
@@ -60,7 +60,7 @@ const TransferList = (props: Props) => {
 
   const sendFlagCheck = () => {
     if(sendFlag){
-      setStatus({...status, open: true, message: '選択し終わったら送信ボタンを押してね！'})
+      setStatus({...status, open: true, type:'info', message: '選択し終わったら送信ボタンを押してね！'})
       setSendFlag(false)
     }
   }
@@ -142,7 +142,7 @@ const TransferList = (props: Props) => {
             <Button 
               sx={{ my: 0.5 }}
               onClick={setData}
-              disabled={csvHeader.length === 0}
+              disabled={csvHeader.length === 0 || right.length > 0}
               variant="contained"
               color="success"
               >

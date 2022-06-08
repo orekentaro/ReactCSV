@@ -2,6 +2,7 @@
   "name": "csvclientreact",
   "private": true,
   "version": "0.0.0",
+  "proxy": "http://localhost:8080",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -15,6 +16,7 @@
     "@mui/material": "^5.8.1",
     "@mui/styled-engine-sc": "^5.8.0",
     "@types/node": "^17.0.39",
+    "axios": "^0.27.2",
     "csv": "^6.1.0",
     "csv-parse": "^5.1.0",
     "material-ui-dropzone": "^3.5.0",

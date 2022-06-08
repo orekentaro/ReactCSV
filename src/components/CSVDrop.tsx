@@ -13,41 +13,50 @@ import DialogTitle from '@mui/material/DialogTitle';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
+import LoadingBackdrop from './LoadingBackdrop';
+import axios from 'axios'
+
 
 function CSVDropZone() {
-  const handleClose = () => {
-    setStatus({ ...status, open: false })
-  }
   const [csvHeader, setCsvHeader] = React.useState<string[]>([]);
   const [csvData, setCsvData] = React.useState<any>()
   const [sendHeader, setSendHeader] = React.useState<string[]>([])
-  const [open, setOpen] = React.useState<boolean>(false);
+  const [dialogOpen, setDialogOpen] = React.useState<boolean>(false);
+  const [backdropOpen, setBackdropOpen] = React.useState<boolean>(false);
   const [checkBoxData, setCheckBoxData] = React.useState<string[]>(["CSV"]);
 
-  const [status, setStatus] = React.useState<AlertType>({
+  const handleCloseMessage = () => {
+    setMessageStatus({ ...messageStatus, open: false })
+  }
+
+  const [messageStatus, setMessageStatus] = React.useState<AlertType>({
     open: false,
     type: "success",
-    handleClose: handleClose,
-    message: "成功しましたrea。"
+    handleClose: handleCloseMessage,
+    message: "成功しました。"
   });
 
   const handleCloseDialog = () => {
-    setOpen(false);
+    setDialogOpen(false);
+  };
+
+  const handleToggleBackdrop = () => {
+    setBackdropOpen(!open);
   };
 
   const onDrop = useCallback((acceptedFiles: any) => {
     if(acceptedFiles.length > 1){
-      setStatus({ open: true, type: 'error',handleClose: handleClose, message: '同時に加工できるファイルは一つです。' });
+      setMessageStatus({ open: true, type: 'error',handleClose: handleCloseMessage, message: '同時に加工できるファイルは一つです。' });
     }
     else if(acceptedFiles[0].type !== 'text/csv'){
-      setStatus({ open: true, type: 'error',handleClose: handleClose, message: 'ファイルタイプがCSVではありません。' });
+      setMessageStatus({ open: true, type: 'error',handleClose: handleCloseMessage, message: 'ファイルタイプがCSVではありません。' });
     }
     else {
       readCsv(acceptedFiles[0]).then(header => {
         setCsvHeader(header[0])
       });
       setCsvData(acceptedFiles[0])
-      setStatus({ open: true, type: 'success',handleClose: handleClose, message: 'データセットを押してね！' });
+      setMessageStatus({ open: true, type: 'success',handleClose: handleCloseMessage, message: 'データセットを押してね！' });
     }
   }, [])
 
@@ -64,14 +73,35 @@ function CSVDropZone() {
   const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop})
 
   const submitButtonClick = () => {
-    setOpen(true);
+    setDialogOpen(true);
   }
 
   const handleCloseDialogAndSend = () => {
-    console.log(sendHeader)
-    console.log(csvData)
-    console.log(checkBoxData)
-    setOpen(false);
+    interface SubmitData {
+      header: string[],
+      csvData: Blob,
+      outputType: string[]
+    }
+    interface TypeSafeFormData extends FormData {
+      append<T extends string | Blob | string[]>(name: keyof SubmitData, value: T, fileName?: string): void;
+    }
+    var formData = new FormData() as TypeSafeFormData
+    formData.append('header', sendHeader)
+    formData.append('csvData', csvData, "data.csv")
+    formData.append('outputType', checkBoxData)
+
+    setBackdropOpen(true)
+
+    axios.post('http://localhost:8080/makeData', formData)
+        .then(res => {
+            console.log(res.data)
+        }).catch(e => {
+          console.log(e)
+        }).finally(() => {
+      setMessageStatus({ open: true, type: 'success',handleClose: handleCloseMessage, message: 'データの加工が完了したよ！' });
+      setBackdropOpen(false)
+        })
+    setDialogOpen(false);
     setCheckBoxData(['CSV'])
   }
 
@@ -102,10 +132,10 @@ function CSVDropZone() {
         }
       </div>
       <CustomizedSnackbars
-        open={status.open}
-        handleClose={handleClose}
-        type={status.type}
-        message={status.message}
+        open={messageStatus.open}
+        handleClose={handleCloseMessage}
+        type={messageStatus.type}
+        message={messageStatus.message}
         />
       <div>
         <TransferList
@@ -115,7 +145,7 @@ function CSVDropZone() {
         />
       </div>
       <Dialog
-        open={open}
+        open={dialogOpen}
         onClose={handleCloseDialog}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
@@ -145,6 +175,10 @@ function CSVDropZone() {
           </Button>
         </DialogActions>
       </Dialog>
+      <LoadingBackdrop
+        open={backdropOpen}
+        handleClose={handleToggleBackdrop}
+        />
     </div>
   )
 }
