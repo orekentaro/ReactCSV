@@ -94,7 +94,27 @@ function CSVDropZone() {
 
     axios.post('http://localhost:8080/makeData', formData)
         .then(res => {
-            console.log(res.data)
+          console.log(res)
+          //ダウンロードするCSVファイル名を指定する
+          const filename = "download.csv";
+          //CSVデータ
+          const data = res.data;
+          //BOMを付与する（Excelでの文字化け対策）
+          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+          //Blobでデータを作成する
+          const blob = new Blob([bom, data], { type: "text/csv" });
+          //BlobからオブジェクトURLを作成する
+          const url = (window.URL || window.webkitURL).createObjectURL(blob);
+          //ダウンロード用にリンクを作成する
+          const download = document.createElement("a");
+          //リンク先に上記で生成したURLを指定する
+          download.href = url;
+          //download属性にファイル名を指定する
+          download.download = filename;
+          //作成したリンクをクリックしてダウンロードを実行する
+          download.click();
+          //createObjectURLで作成したオブジェクトURLを開放する
+          (window.URL || window.webkitURL).revokeObjectURL(url);
         }).catch(e => {
           console.log(e)
         }).finally(() => {
