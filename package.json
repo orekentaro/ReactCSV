@@ -19,6 +19,7 @@
     "axios": "^0.27.2",
     "csv": "^6.1.0",
     "csv-parse": "^5.1.0",
+    "encoding-japanese": "^2.0.0",
     "material-ui-dropzone": "^3.5.0",
     "papaparse": "^5.3.2",
     "react": "^18.0.0",
@@ -29,6 +30,7 @@
     "styled-components": "^5.3.5"
   },
   "devDependencies": {
+    "@types/encoding-japanese": "^2.0.0",
     "@types/papaparse": "^5.3.2",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",

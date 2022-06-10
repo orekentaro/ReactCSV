@@ -8,14 +8,14 @@ import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import LoadingBackdrop from './LoadingBackdrop';
 import axios from 'axios'
-
+import Typography from '@mui/material/Typography';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 function CSVDropZone() {
   const [csvHeader, setCsvHeader] = React.useState<string[]>([]);
@@ -53,7 +53,7 @@ function CSVDropZone() {
     }
     else {
       readCsv(acceptedFiles[0]).then(header => {
-        setCsvHeader(header[0])
+        setCsvHeader(header)
       });
       setCsvData(acceptedFiles[0])
       setMessageStatus({ open: true, type: 'success',handleClose: handleCloseMessage, message: 'データセットを押してね！' });
@@ -61,11 +61,25 @@ function CSVDropZone() {
   }, [])
 
   function readCsv(file: string) {
-    return new Promise<string[][]>((resolve, reject) => {
+    return new Promise<string[]>((resolve, reject) => {
       parse(file, {
+        encoding: 'Shift-JIS',
         complete: (results: any) => {
-          resolve(results.data);
+          resolve(results.data[0]);
         }
+      });
+    });
+  }
+
+  function csvToJson(file:string){
+    return new Promise<string[]>((resolve) =>{
+      parse(file, {
+        header: true,
+        delimiter:',',
+        encoding: 'Shift-JIS',
+        complete:(json: any) =>{
+          resolve(json.data)
+        },
       });
     });
   }
@@ -91,8 +105,22 @@ function CSVDropZone() {
     formData.append('outputType', checkBoxData)
 
     setBackdropOpen(true)
-
-    axios.post('http://localhost:8080/makeData', formData)
+    if(checkBoxData.includes("JSON")) {
+      csvToJson(csvData).then(csvToJson => {
+        console.log(csvToJson)
+        const blob = new Blob([JSON.stringify(csvToJson, null, '  ')], {type: 'application/json'});
+        const jsonUrl = URL.createObjectURL(blob);
+        const jsonDownload = document.createElement("a");
+        //リンク先に上記で生成したURLを指定する
+        jsonDownload.href = jsonUrl;
+        //download属性にファイル名を指定する
+        jsonDownload.download = "download.json";
+        //作成したリンクをクリックしてダウンロードを実行する
+        jsonDownload.click();
+      });
+    }
+    if(checkBoxData.includes("CSV")) {
+      axios.post('http://localhost:8080/makeData', formData)
         .then(res => {
           console.log(res)
           //ダウンロードするCSVファイル名を指定する
@@ -117,12 +145,18 @@ function CSVDropZone() {
           (window.URL || window.webkitURL).revokeObjectURL(url);
         }).catch(e => {
           console.log(e)
-        }).finally(() => {
+        })
+      }
+
+    if(checkBoxData.length > 0){
       setMessageStatus({ open: true, type: 'success',handleClose: handleCloseMessage, message: 'データの加工が完了したよ！' });
       setBackdropOpen(false)
-        })
-    setDialogOpen(false);
-    setCheckBoxData(['CSV'])
+      setDialogOpen(false);
+      setCheckBoxData(['CSV'])
+    } else {
+      setMessageStatus({ open: true, type: 'error',handleClose: handleCloseMessage, message: '一つもチェックされてないよ（ ;  ; ）' });
+    }
+    
   }
 
   const clickCsvCheck = () => {
@@ -140,6 +174,20 @@ function CSVDropZone() {
       setCheckBoxData(checkBoxData.filter((element) => element !== dataStyle ))
     }
   }
+
+  const theme = createTheme({
+    typography: {
+      subtitle1: {
+        fontSize: 12,
+      },
+      body1: {
+        fontWeight: 500,
+      },
+      button: {
+        fontStyle: 'italic',
+      },
+    },
+  });
 
   return (
     <div>
@@ -185,8 +233,13 @@ function CSVDropZone() {
               <Checkbox
                 onChange={clickJsonCheck}
               />
-              } label="JSON"/>
+              } label="JSON*"/>
           </FormGroup>
+          <div>
+          <ThemeProvider theme={theme}>
+            <Typography variant="subtitle1">*全てのカラムのデータがダウンロードされます。</Typography>
+          </ThemeProvider>
+        </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>キャンセル</Button>
